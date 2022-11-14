@@ -37,7 +37,7 @@ import com.example.pleasework.ui.theme.PleaseWorkTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var view = ViewModelProvider(this).get(LiesViewModel::class.java)
+        val view = ViewModelProvider(this)[LiesViewModel::class.java]
 
         setContent {
             PleaseWorkTheme {
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    DisplayLies(view.lies) { lie ->
+                    DisplayLies(view) { lie ->
                         println(lie)
                     }
                 }
@@ -57,15 +57,16 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun DisplayLies(list:MutableLiveData<MutableList<Lie>> , selectedItem: (Lie) -> Unit) {
+fun DisplayLies(view:LiesViewModel , selectedItem: (Lie) -> Unit) {
 //    val lies = remember { LiesContext.lies }
-    val lieList by list.observeAsState(initial = LiesContext.lies)
+    val lieList: MutableList<Lie> by view.lies.observeAsState(ArrayList())
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         items(lieList) { item: Lie ->
             lieListItem(lie = item) {
                 lieList.removeFirst()
+                println(lieList)
             }
         }
     }
