@@ -6,22 +6,17 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.text.font.FontWeight.Companion.Black
@@ -38,16 +33,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val view = ViewModelProvider(this)[LiesViewModel::class.java]
-
         setContent {
             PleaseWorkTheme {
-                // A surface container using the 'background' color from the theme
+                // A surface container using the "background" color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    DisplayLies(view) { lie ->
+                    DisplayLies(view.lies.observeAsState(ArrayList()).value) { lie ->
                         println(lie)
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Draw(view.testShit.observeAsState("").value, view)
                     }
                 }
             }
@@ -55,17 +56,28 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun Draw(s: String, view: LiesViewModel) {
+//    Text(text = s)
+    Button(onClick = {
+        view.add()
+    }) {
+        Text(text = s)
+    }
+
+}
 
 @Composable
-fun DisplayLies(view:LiesViewModel , selectedItem: (Lie) -> Unit) {
+fun DisplayLies(lieList: MutableList<Lie>, selectedItem: (Lie) -> Unit) {
 //    val lies = remember { LiesContext.lies }
-    val lieList: MutableList<Lie> by view.lies.observeAsState(ArrayList())
+//    val lieList: MutableList<Lie> by view.lies.observeAsState(ArrayList())
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         items(lieList) { item: Lie ->
             lieListItem(lie = item) {
-                lieList.removeFirst()
+//                view.remove()
+//                view.add()
                 println(lieList)
             }
         }
@@ -75,10 +87,32 @@ fun DisplayLies(view:LiesViewModel , selectedItem: (Lie) -> Unit) {
 
 class LiesViewModel : ViewModel() {
 
-    val lies: MutableLiveData<MutableList<Lie>> = MutableLiveData<MutableList<Lie>>(LiesContext.lies)
+    val lies: MutableLiveData<MutableList<Lie>> =
+        MutableLiveData<MutableList<Lie>>(LiesContext.lies)
 
-    fun remove(){
+    var testShit: MutableLiveData<String> = MutableLiveData("test thing hehe");
+
+    fun changeTestShit() {
+        this.testShit.value = "changed test shit"
+    }
+
+    fun remove() {
         lies.value?.removeFirst();
+    }
+
+    fun add() {
+        lies.value?.add(
+            Lie(
+                "added by view",
+                "fda",
+                "dfa",
+                LieSeverity.MILD,
+                ArrayList(),
+                ArrayList(),
+                "anvc"
+            )
+        )
+        println(lies.value)
     }
 
 }
