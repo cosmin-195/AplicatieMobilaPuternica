@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun lieListItem(lie: Lie, selectedItem: (Lie) -> Unit) {
+fun LieListItem(lie: Lie, selectedItem: (Lie) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -29,11 +29,11 @@ fun lieListItem(lie: Lie, selectedItem: (Lie) -> Unit) {
                 .clickable { selectedItem(lie) },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = lie.id)
-            Text(text = lie.title)
+            lie.id?.let { Text(text = it) }
+            lie.title?.let { Text(text = it) }
             Text(text = lie.severity.toString())
-            Text(text = lie.text)
-            Text(text = lie.truth)
+            lie.text?.let { Text(text = it) }
+            lie.truth?.let { Text(text = it) }
         }
     }
 }
