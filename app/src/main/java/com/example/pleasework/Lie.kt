@@ -10,7 +10,11 @@ data class Lie(
     var liesRelatedTo: MutableList<Lie>,
     var peopleTold: MutableList<String>,
     var truth: String?
-) : Serializable
+) : Serializable{
+    override fun toString(): String {
+        return "Lie(id=$id, title=$title)"
+    }
+}
 
 enum class LieSeverity {
     MILD,

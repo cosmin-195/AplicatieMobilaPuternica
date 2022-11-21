@@ -15,17 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pleasework.ui.theme.PleaseWorkTheme
 
-class LieDetailActivity : ComponentActivity() {
+class LieAddActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val id = this.intent.getStringExtra("update");
-        var toUpdate = LiesContext.lies.find { it.id == id }!!
-
-
+        var toAdd = Lie(null, null, null, null, ArrayList(), ArrayList(), null)
         setContent {
             PleaseWorkTheme {
                 // A surface container using the 'background' color from the theme
@@ -38,13 +34,13 @@ class LieDetailActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        UpdateTitle(toUpdate)
-                        UpdateText(toUpdate)
-                        UpdateSeverity(toUpdate)
-                        UpdateTruth(toUpdate = toUpdate)
-                        UpdatePeople(toUpdate = toUpdate)
-                        UpdateLiesRelatedTo(toUpdate = toUpdate)
-                        Update()
+                        AddTitle(toAdd)
+                        AddText(toAdd)
+                        AddSeverity(toAdd)
+                        AddTruth(toAdd = toAdd)
+                        AddPeople(toAdd = toAdd)
+                        AddLiesRelatedTo(toAdd = toAdd)
+                        Save(toSave = toAdd)
                     }
                 }
             }
@@ -52,12 +48,12 @@ class LieDetailActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
-fun Update() {
+fun Save(toSave: Lie) {
     val context = LocalContext.current
     Button(
         onClick = {
+            LiesContext.lies.add(toSave)
             LiesContext.lies.forEach { println(it) }
             context.startActivity(Intent(context, MainActivity::class.java))
         },
@@ -67,36 +63,36 @@ fun Update() {
 }
 
 @Composable
-fun UpdateTitle(toUpdate: Lie) {
-    var text by remember { mutableStateOf(toUpdate.title!!) }
+fun AddTitle(toAdd: Lie) {
+    var text by remember { mutableStateOf("") }
     Text(text = "Title")
     OutlinedTextField(
         value = text,
         onValueChange = {
             text = it
-            toUpdate.title = it
+            toAdd.title = it
         },
-        label = { Text("Update title") }
+        label = { Text("Add a title") }
     )
 }
 
 @Composable
-fun UpdateText(toUpdate: Lie) {
-    var text by remember { mutableStateOf(toUpdate.text!!) }
+fun AddText(toAdd: Lie) {
+    var text by remember { mutableStateOf("") }
     Text(text = "Text")
     OutlinedTextField(
         value = text,
         onValueChange = {
             text = it
-            toUpdate.text = it
+            toAdd.text = it
         },
-        label = { Text("Update content") }
+        label = { Text("Add content") }
     )
 }
 
 @Composable
-fun UpdateSeverity(toUpdate: Lie) {
-    var severity by remember { mutableStateOf(toUpdate.severity!!) }
+fun AddSeverity(toAdd: Lie) {
+    var severity by remember { mutableStateOf(LieSeverity.MILD) }
     var expanded by remember { mutableStateOf(false) }
     val items = LieSeverity.values()
     Text(text = "Severity")
@@ -120,7 +116,7 @@ fun UpdateSeverity(toUpdate: Lie) {
                 DropdownMenuItem(onClick = {
                     severity = s
                     expanded = false
-                    toUpdate.severity = s
+                    toAdd.severity = s
                 }) {
                     Text(text = s.toString())
                 }
@@ -130,70 +126,68 @@ fun UpdateSeverity(toUpdate: Lie) {
 }
 
 @Composable
-fun UpdateTruth(toUpdate: Lie) {
-    var text by remember { mutableStateOf(toUpdate.truth!!) }
+fun AddTruth(toAdd: Lie) {
+    var text by remember { mutableStateOf("") }
     Text(text = "Truth")
     OutlinedTextField(
         value = text,
         onValueChange = {
             text = it
-            toUpdate.truth = it
+            toAdd.truth = it
         },
         label = { Text("The truth") }
     )
 }
 
 @Composable
-fun UpdateLiesRelatedTo(toUpdate: Lie) {
+fun AddLiesRelatedTo(toAdd: Lie) {
+    var text by remember { mutableStateOf("") }
     var state = remember { mutableStateListOf<Pair<String, Boolean>>() }
-    LiesContext.lies.forEach { lie ->
-        if (lie.id != toUpdate.id)
-
-            state.add(Pair(lie.title!!, lie.id in toUpdate.liesRelatedTo.map { it.id }))
+    LiesContext.lies.forEach {
+        if (it.id != toAdd.id)
+            state.add(Pair(it.title!!, false))
     }
     Text(text = "Related to:")
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         itemsIndexed(state) { index, item ->
-            Row() {
-                Checkbox(checked = state[index].second, onCheckedChange = {
-                    state[index] = Pair(state[index].first, !state[index].second)
-                    if (state[index].second) {
-                        LiesContext.lies.find { it.title == state[index].first }
-                            ?.let { it1 -> toUpdate.liesRelatedTo.add(it1) }
-                    } else {
-                        toUpdate.liesRelatedTo.removeIf { it.title == state[index].first }
-                    }
-                })
-                Text(state[index].first)
-            }
+            Checkbox(checked = state[index].second, onCheckedChange = {
+                state[index] = Pair(state[index].first, !state[index].second)
+                if (state[index].second) {
+                    LiesContext.lies.find { it.title == state[index].first }
+                        ?.let { it1 -> toAdd.liesRelatedTo.add(it1) }
+                } else {
+                    toAdd.liesRelatedTo.removeIf { it.title == state[index].first }
+                }
+            })
+            Text(state[index].first)
         }
     }
 }
 
 @Composable
-fun UpdatePeople(toUpdate: Lie) {
-    var count by remember { mutableStateOf(toUpdate.peopleTold.size) }
+fun AddPeople(toAdd: Lie) {
+    var count by remember { mutableStateOf(1) }
     Text(text = "People told to:")
     for (i in 0 until count) {
-        var state by remember { mutableStateOf(toUpdate.peopleTold.getOrElse(i) { "" }) }
+        var state by remember { mutableStateOf("") }
         OutlinedTextField(
             value = state,
             onValueChange = {
                 state = it
-                if (toUpdate.peopleTold.size < i + 1) {
-                    toUpdate.peopleTold.add(it)
+                if (toAdd.peopleTold.size < i + 1) {
+                    toAdd.peopleTold.add(it)
                 } else {
-                    toUpdate.peopleTold[i] = it
+                    toAdd.peopleTold[i] = it
                 }
             },
-            label = { Text("Update people who've heard it") }
+            label = { Text("Add people who've heard it") }
         )
     }
     Button(onClick = {
         count++
     }) {
-        Text("Add another person")
+        Text("Add new")
     }
 }
