@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,7 +14,7 @@
         android:theme="@style/Theme.PleaseWork"
         tools:targetApi="31">
         <activity
-            android:name=".LieDetailActivity"
+            android:name=".activities.LieDetailActivity"
             android:exported="false"
             android:label="@string/title_activity_lie_detail"
             android:theme="@style/Theme.PleaseWork">
@@ -22,7 +23,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".LieAddActivity"
+            android:name=".activities.LieAddActivity"
             android:exported="false"
             android:label="@string/title_activity_lie_detail"
             android:theme="@style/Theme.PleaseWork">
@@ -33,7 +34,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.PleaseWork">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,8 +1,6 @@
 package com.example.pleasework
 
-import android.app.ActivityOptions
 import android.content.Intent
-import android.os.Bundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.unit.dp
+import com.example.pleasework.activities.LieDetailActivity
+import com.example.pleasework.domain.Lie
 
 @Composable
 fun LieListItem(lie: Lie, selectedItem: (Lie) -> Unit) {

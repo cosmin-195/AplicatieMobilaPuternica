@@ -1,13 +1,12 @@
-package com.example.pleasework
-
+package com.example.pleasework.domain
 import java.io.Serializable
 
-data class Lie(
+data class LegacyLie(
     var id: String?,
     var title: String?,
     var text: String?,
     var severity: LieSeverity?,
-    var liesRelatedTo: MutableList<Lie>,
+    var liesRelatedTo: MutableList<LegacyLie>,
     var peopleTold: MutableList<String>,
     var truth: String?
 ) : Serializable{

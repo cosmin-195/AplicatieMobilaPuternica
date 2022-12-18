@@ -1,8 +1,8 @@
-package com.example.pleasework
+package com.example.pleasework.domain
 
 object LiesContext {
-    val lies = mutableListOf(
-        Lie(
+    val legacyLies = mutableListOf(
+        LegacyLie(
             "1",
             "lie1",
             "the lie 1 fsav",
@@ -11,7 +11,7 @@ object LiesContext {
             ArrayList(),
             "the real thing"
         ),
-        Lie(
+        LegacyLie(
             "2",
             "lie2",
             "the second lie",
