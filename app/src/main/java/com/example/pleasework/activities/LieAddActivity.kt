@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import com.example.pleasework.MainActivity
 import com.example.pleasework.business.LieService
 import com.example.pleasework.domain.Lie
-import com.example.pleasework.domain.LieId
 import com.example.pleasework.domain.LieSeverity
 import com.example.pleasework.domain.LieWithLies
 import com.example.pleasework.ui.theme.PleaseWorkTheme
@@ -44,6 +43,7 @@ class LieAddActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
                     val lieList: List<Lie>? by service.getAll().observeAsState()
+                    val relatedToIds = ArrayList<Int>()
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -54,8 +54,8 @@ class LieAddActivity : ComponentActivity() {
                         AddSeverity(toAdd.lie)
                         AddTruth(toAdd = toAdd.lie)
 //                        AddPeople(toAdd = toAdd)
-                        lieList?.let { AddLiesRelatedTo(toAdd, it) }
-                        Save(toAdd, service)
+                        lieList?.let { AddLiesRelatedTo(toAdd, it, relatedToIds) }
+                        Save(toAdd, service, relatedToIds)
                     }
                 }
             }
@@ -64,17 +64,20 @@ class LieAddActivity : ComponentActivity() {
 }
 
 @Composable
-fun Save(toSave: LieWithLies, service: LieService) {
+fun Save(toSave: LieWithLies, service: LieService, relatedToIds: ArrayList<Int>) {
     val context = LocalContext.current
+    println(service.repository.getAllLiesWithRelations().observeAsState())
+
     Button(
         onClick = {
-            service.insertLieWithRelations(toSave)
+            service.insertLieWithRelations(toSave, relatedToIds)
             context.startActivity(Intent(context, MainActivity::class.java))
         },
     ) {
         Text(text = "Save")
     }
 }
+
 
 @Composable
 fun AddTitle(toAdd: Lie) {
@@ -154,7 +157,7 @@ fun AddTruth(toAdd: Lie) {
 }
 
 @Composable
-fun AddLiesRelatedTo(toUpdate: LieWithLies, lies: List<Lie>) {
+fun AddLiesRelatedTo(toUpdate: LieWithLies, lies: List<Lie>, relatedToIds: MutableList<Int>) {
     val state = remember { mutableStateListOf<LieCheckbox>() }
     lies.forEach { lie ->
         state.add(
@@ -171,18 +174,15 @@ fun AddLiesRelatedTo(toUpdate: LieWithLies, lies: List<Lie>) {
     ) {
         itemsIndexed(state) { index, item ->
             Row() {
-                Checkbox(checked = state[index].checked, onCheckedChange = { newValue          ->
-                    println("changedd  " +state[index] + " to" + newValue.toString())
+                Checkbox(checked = state[index].checked, onCheckedChange = { newValue ->
+                    println("changed " + state[index] + " to" + newValue.toString())
                     state[index] = state[index].copy(checked = newValue)
+                    println(state[index])
                     if (state[index].checked) {
-                        toUpdate.lie.id?.let { it1 ->
-                            LieId(
-                                state[index].id,
-                                it1
-                            )
-                        }?.let { it2 -> toUpdate.relatedTo.add(it2) }
+                        relatedToIds.add(state[index].id)
+                        println(relatedToIds)
                     } else {
-                        toUpdate.relatedTo.removeIf { it.lieId == state[index].id }
+                        relatedToIds.removeIf { it == state[index].id }
                     }
                 })
                 Text(state[index].title)
@@ -190,28 +190,3 @@ fun AddLiesRelatedTo(toUpdate: LieWithLies, lies: List<Lie>) {
         }
     }
 }
-
-    @Composable
-    fun AddPeople(toAdd: Lie) {
-//    var count by remember { mutableStateOf(1) }
-//    Text(text = "People told to:")
-//    for (i in 0 until count) {
-//        var state by remember { mutableStateOf("") }
-//        OutlinedTextField(
-//            value = state,
-//            onValueChange = {
-//                state = it
-//                if (toAdd.peopleTold.size < i + 1) {
-//                    toAdd.peopleTold.add(it)
-//                } else {
-//                    toAdd.peopleTold[i] = it
-//                }
-//            },
-//            label = { Text("Add people who've heard it") }
-//        )
-//    }
-//    Button(onClick = {
-//        count++
-//    }) {
-//        Text("Add new")
-    }

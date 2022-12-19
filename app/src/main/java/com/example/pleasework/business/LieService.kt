@@ -2,6 +2,7 @@ package com.example.pleasework.business
 
 import androidx.lifecycle.LiveData
 import com.example.pleasework.domain.Lie
+import com.example.pleasework.domain.LieId
 import com.example.pleasework.domain.LieWithLies
 import com.example.pleasework.persistence.LieRepository
 import java.util.concurrent.ExecutorService
@@ -32,9 +33,19 @@ class LieService @Inject constructor(
         return repository.getLieWithRelationsById(id)
     }
 
-    fun insertLieWithRelations(lie: LieWithLies) {
+    fun insertLieWithRelations(lie: LieWithLies, relatedToIds: ArrayList<Int>) {
         executorService.submit {
+            relatedToIds.forEach {
+                lie.relatedTo.add(LieId(it, -1))
+            }
+            println(lie.relatedTo)
             repository.insertLieWithRelations(lie)
+        }
+    }
+
+    fun update(lie: Lie) {
+        executorService.submit {
+            repository.updateLie(lie)
         }
     }
 }

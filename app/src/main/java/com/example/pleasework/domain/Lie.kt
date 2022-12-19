@@ -1,6 +1,9 @@
 package com.example.pleasework.domain
 
-import androidx.room.*
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.Relation
 import java.io.Serializable
 
 @Entity
@@ -9,8 +12,6 @@ data class Lie(
     var title: String?,
     var text: String?,
     var severity: LieSeverity?,
-//    var liesRelatedTo: MutableList<Lie>,
-//    var peopleTold: MutableList<String>,
     var truth: String?
 ) : Serializable {
     override fun toString(): String {
@@ -21,22 +22,14 @@ data class Lie(
 @Entity
 data class LieId(
     @PrimaryKey var lieId: Int,
-    var parentLie:Int
+    var parentLie: Int
 )
-
-
-//@Entity(primaryKeys = ["id", "lieId"])
-//data class LieCrossRef(
-//    val lieId: String,
-//    val id: String
-//)
 
 data class LieWithLies(
     @Embedded val lie: Lie,
     @Relation(
         parentColumn = "id",
         entityColumn = "parentLie",
-//        associateBy = Junction(LieCrossRef::class)
     )
     val relatedTo: MutableList<LieId>
 )

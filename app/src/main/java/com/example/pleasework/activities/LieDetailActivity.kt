@@ -24,7 +24,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.pleasework.MainActivity
 import com.example.pleasework.business.LieService
 import com.example.pleasework.domain.Lie
-import com.example.pleasework.domain.LieId
 import com.example.pleasework.domain.LieSeverity
 import com.example.pleasework.domain.LieWithLies
 import com.example.pleasework.ui.theme.PleaseWorkTheme
@@ -52,9 +51,15 @@ class LieDetailActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
+
                     val toUpdate: LieWithLies? by view.lie!!.observeAsState()
-                    val lieList: List<Lie>? by view.lies.observeAsState()
-                    println("a=$toUpdate")
+                    val lieList: List<LieWithLies>? by view.lies.observeAsState()
+                    val relatedToIds = ArrayList<Int>()
+
+                    println("this=$toUpdate")
+                    println("All lies=$lieList")
+
+
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -65,8 +70,14 @@ class LieDetailActivity : ComponentActivity() {
                         toUpdate?.lie?.let { UpdateSeverity(it) }
                         toUpdate?.lie?.let { UpdateTruth(it) }
 //                        UpdatePeople(toUpdate = toUpdate)
-                        toUpdate?.lie?.let { UpdateLiesRelatedTo(toUpdate!!, lieList!!) }
-                        Update(service)
+                        toUpdate?.lie?.let {
+                            UpdateLiesRelatedTo(
+                                toUpdate!!,
+                                lieList!!,
+                                relatedToIds
+                            )
+                        }
+                        Update(service, toUpdate)
                     }
                 }
             }
@@ -76,12 +87,11 @@ class LieDetailActivity : ComponentActivity() {
 
 
 @Composable
-fun Update(service: LieService) {
+fun Update(service: LieService, toUpdate: LieWithLies?) {
     val context = LocalContext.current
     Button(
         onClick = {
-//            LiesContext.legacyLies.forEach { println(it) }
-//            viewModel.add() // todo .update(lie, liesRelatedTo: List<id> 
+            service.update(toUpdate!!.lie)
             context.startActivity(Intent(context, MainActivity::class.java))
         },
     ) {
@@ -168,68 +178,43 @@ fun UpdateTruth(toUpdate: Lie) {
 }
 
 @Composable
-fun UpdateLiesRelatedTo(toUpdate: LieWithLies, lies: List<Lie>) {
+fun UpdateLiesRelatedTo(
+    toUpdate: LieWithLies,
+    lies: List<LieWithLies>,
+    relatedToIds: MutableList<Int>
+) {
     val state = remember { mutableStateListOf<LieCheckbox>() }
     lies.forEach { lie ->
         state.add(
             LieCheckbox(
-                lie.id!!,
-                lie.id in toUpdate.relatedTo.map { it.parentLie },
-                lie.title!!
+                lie.lie.id!!,
+                toUpdate.relatedTo.map { it.lieId }.contains(lie.lie.id),
+                lie.lie.title!!
             )
         )
     }
+    println("state=${state.toList()}")
     Text(text = "Related to:")
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
     ) {
         itemsIndexed(state) { index, item ->
             Row() {
-                Checkbox(checked = state[index].checked, onCheckedChange = {
-                    println("changedd ${state[index]} to ${state[index].checked}")
-                    state[index] = state[index].copy(checked = !state[index].checked)
+                Checkbox(checked = state[index].checked, onCheckedChange = { newValue ->
+                    println("changed  " + state[index] + " to " + newValue.toString())
+                    state[index] = state[index].copy(checked = newValue)
+                    println(state[index])
                     if (state[index].checked) {
-                        toUpdate.lie.id?.let { it1 ->
-                            LieId(
-                                state[index].id,
-                                it1
-                            )
-                        }?.let { it2 -> toUpdate.relatedTo.add(it2) }
-                        println(toUpdate.relatedTo)
+                        relatedToIds.add(state[index].id)
+                        println(relatedToIds)
                     } else {
-                        toUpdate.relatedTo.removeIf { it.lieId == state[index].id }
+                        relatedToIds.removeIf { it == state[index].id }
                     }
                 })
                 Text(state[index].title)
             }
         }
     }
-}
-
-@Composable
-fun UpdatePeople(toUpdate: Lie) {
-//    var count by remember { mutableStateOf(toUpdate.peopleTold.size) }
-//    Text(text = "People told to:")
-//    for (i in 0 until count) {
-//        var state by remember { mutableStateOf(toUpdate.peopleTold.getOrElse(i) { "" }) }
-//        OutlinedTextField(
-//            value = state,
-//            onValueChange = {
-//                state = it
-//                if (toUpdate.peopleTold.size < i + 1) {
-//                    toUpdate.peopleTold.add(it)
-//                } else {
-//                    toUpdate.peopleTold[i] = it
-//                }
-//            },
-//            label = { Text("Update people who've heard it") }
-//        )
-//    }
-//    Button(onClick = {
-//        count++
-//    }) {
-//        Text("Add another person")
-//    }
 }
 
 data class LieCheckbox(
@@ -248,10 +233,13 @@ class LieDetailViewModel @Inject constructor(private val service: LieService) : 
         lie = service.getLieWithRelationsById(id)
     }
 
-    var lies: LiveData<List<Lie>> = fetchLies()
+    var lies: LiveData<List<LieWithLies>> = fetchLies()
 
-    fun fetchLies(): LiveData<List<Lie>> {
-        return service.getAll()
+    fun fetchLies(): LiveData<List<LieWithLies>> {
+        return service.repository.getAllLiesWithRelations()
     }
 
+    fun fetchRelations(): LiveData<List<Int>>? {
+        return this.lie?.value?.lie?.id?.let { service.repository.getRelationsByLieId(it) }
+    }
 }

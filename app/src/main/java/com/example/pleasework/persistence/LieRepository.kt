@@ -17,26 +17,36 @@ interface LieRepository {
     @Insert
     fun insertRel(lid: LieId)
 
-    @Transaction
+    //    @Transaction
     fun insertLieWithRelations(lie: LieWithLies) {
         val insertedId: Int = insert(lie.lie).toInt()
         lie.relatedTo.stream()
             .peek { it.parentLie = insertedId }
             .forEach {
                 insertRel(it)
+                insertRel(LieId(lieId = insertedId, parentLie = it.lieId))
             }
     }
 
     @Delete()
     fun delete(lie: Lie)
 
-    @Query("SELECT * FROM Lie as l left join LieId as lid on l.id=:id and lid.lieId=l.id")
+    @Query("SELECT * FROM Lie as l left join LieId as lid on lid.lieId=l.id where l.id=:id")
     fun getLieWithRelationsById(id: Int): LiveData<LieWithLies>
 
     @Query("SELECT * FROM Lie as l where l.id=:id")
     fun getLieById(id: Int): LiveData<Lie>
 
-    //    @Transaction
     @Query("SELECT * FROM Lie as l left join LieId as lid on lid.lieId=l.id")
     fun getAllLiesWithRelations(): LiveData<List<LieWithLies>>
+
+    @Query("SELECT parentLie FROM LieId where lieId=:id")
+    fun getRelationsByLieId(id: Int): LiveData<List<Int>>
+
+    @Update
+    fun updateLie(lie: Lie)
+
+    @Delete
+    fun deleteRel(lieId: LieId)
 }
+
